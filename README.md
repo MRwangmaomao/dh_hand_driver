@@ -38,6 +38,7 @@ dh_hand_driver/
     ├── src/
     │   ├── node.cpp					# Controller Main Node
     │   ├── test_client.cpp				# Test hand example
+    │   ├── hand_controller_usr_client.cpp  # control hand for user
     └── srv/  
 		└── hand_state.srv           	# To genrate servise header file
 ```
@@ -177,4 +178,15 @@ dh_hand_driver/
    > 
    > get Position 2	: = 2
 
-5. ##### Enjoy it
+5. ##### about user client 
+  
+  ```
+   $ rosrun dh_hand_driver hand_controller_usr_client
+  ```
+  when we publish the /dh_hand topic
+  ```
+   $ rostopic pub /dh_hand std_msgs/Int8 "data: 10"
+  ```
+  the dh grasp will call the graspOnceCallback function and the grasp excute action.
+
+6. ##### Enjoy it
