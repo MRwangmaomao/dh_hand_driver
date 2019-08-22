@@ -5,7 +5,10 @@
 #include "std_msgs/Int8.h"
 
 typedef actionlib::SimpleActionClient<dh_hand_driver::ActuateHandAction> Client;
-ros::Subscriber dh_hand_sub; // 接收电爪消息
+
+
+ 
+
 
 class DH_HandActionClient {
 private:
@@ -27,10 +30,14 @@ private:
         ROS_INFO("Got Feedback: %i", feedback->position_reached);
     }
 public:
-    DH_HandActionClient(const std::string client_name, bool flag = true) :
-            client(client_name, flag) {
-    }
+    DH_HandActionClient(const std::string client_name, bool flag, ros::NodeHandle n) :
+            client(client_name, flag), n_(n) {
+        client1 = n_.serviceClient<dh_hand_driver::hand_state>("hand_joint_state");
 
+        dh_hand_sub = n_.subscribe<std_msgs::Int8>("/dh_hand", 1,  boost::bind(&DH_HandActionClient::graspOnceCallback, this,_1));
+    }
+  
+    
     //client start
     void Start(int32_t motorID , int32_t setpos,int32_t setforce) {
         ROS_INFO("wait server");
@@ -63,68 +70,57 @@ public:
 
         printf("Current State: %s\n", client.getState().toString().c_str());
     }
+    
+    // grasp once
+    void graspOnceCallback(const std_msgs::Int8::ConstPtr& dhhand_msg)
+    {
+        Start(1,dhhand_msg->data,10);
+ 
+        // use service to get hand state
+        
+        
+        srv.request.get_target = 0;
+        if (client1.call(srv))
+        {
+            ROS_INFO("force: %d",srv.response.return_data);
+        }
+        else
+        {
+            ROS_ERROR("Failed to call service");
+            return;
+        }
+        srv.request.get_target = 1;
+        if (client1.call(srv))
+        {
+            ROS_INFO("pos_1: %d",srv.response.return_data);
+        }
+        else
+        {
+            ROS_ERROR("Failed to call service");
+            return;
+        }
+    }
+
 private:
     Client client;
-};
-DH_HandActionClient actionclient("actuate_hand", true);
-ros::ServiceClient client;
-void graspOnceCallback(std_msgs::Int8::Ptr dhhand_msg)
-{
-    actionclient.Start(1,dhhand_msg->data,10);
- 
-    //use service to get hand state
-    
     dh_hand_driver::hand_state srv;
-    srv.request.get_target = 0;
-    if (client.call(srv))
-    {
-        ROS_INFO("force: %d",srv.response.return_data);
-    }
-     else
-    {
-        ROS_ERROR("Failed to call service");
-        return;
-    }
-    srv.request.get_target = 1;
-    if (client.call(srv))
-    {
-        ROS_INFO("pos_1: %d",srv.response.return_data);
-    }
-     else
-    {
-        ROS_ERROR("Failed to call service");
-        return;
-    }
-}
+    ros::NodeHandle n_;
+    ros::ServiceClient client1;
+    ros::Subscriber dh_hand_sub; /// 接收电爪消息
+};
 
-
+ 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "test_hand_client");
-    // if(argc != 4)
-    // {
-    //      ROS_INFO("Useage: rosrun dh_hand_driver hand_controller_client [motorID] [position] [Force]! ");
-    //         return -1;
-    // }
+    ros::init(argc, argv, "hand_user_client");
+     
     ROS_INFO("starting");
     ros::NodeHandle n;
     
     ROS_INFO("starting client");
-    client = n.serviceClient<dh_hand_driver::hand_state>("hand_joint_state");
-    dh_hand_sub = n.subscribe("/dh_hand", 1,
-                          &graspOnceCallback);
-
-    ros::spin();
-    //this command belong AG-3E
-    //    srv.request.get_target = 2;
-    // if (client.call(srv))
-    // {
-    //     ROS_INFO("pos_2: %d",srv.response.return_data);
-    // }
-    //  else
-    // {
-    //     ROS_ERROR("Failed to call service");
-    //     return 1;
-    // }
+     
+    DH_HandActionClient actionclient("actuate_hand", true, n);
+  
+    ros::spin(); 
     ros::shutdown();
     return 0;
 }
