@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.3)
+cmake_minimum_required(VERSION 3.10)
 project(dh_hand_driver)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS}  -Wall  -O3 -march=native ")
@@ -46,8 +46,7 @@ generate_messages(
   DEPENDENCIES 
   actionlib_msgs 
   std_msgs
-  sensor_msgs
-
+  sensor_msgs 
 )
 
 catkin_package(
@@ -73,11 +72,11 @@ include_directories(
   include/dh_hand_driver
 )
 
-#add_library(${PROJECT_NAME} SHARED 
-#include/dh_hand_driver/hand_controller.cpp
-#include/dh_hand_driver/DH_datastream.cpp 
-#include/dh_hand_driver/hand_driver.cpp 
-#)
+add_library(${PROJECT_NAME} SHARED 
+include/dh_hand_driver/hand_controller.cpp
+include/dh_hand_driver/DH_datastream.cpp 
+include/dh_hand_driver/hand_driver.cpp 
+)
 
 add_executable(hand_controller   
 include/dh_hand_driver/hand_controller.cpp

@@ -6,4 +6,7 @@
   <node pkg="dh_hand_driver" type="hand_controller" name="hand_controller" output="screen">
   </node>
 
+  <!-- 自己添加的， 修改了接口 -->
+  <node pkg="dh_hand_driver" type="hand_controller_usr_client" name="dh_hand_driver_client"/>
+
 </launch>
